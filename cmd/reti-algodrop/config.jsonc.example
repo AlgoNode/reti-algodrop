@@ -1,0 +1,22 @@
+{
+  "algod-api": {
+    "address": "https://testnet-api.4160.nodely.io",
+    "token": "...",
+    "ratelimit": 50
+  },
+  "gql-api": {
+    "address": "https://testnet-gql.4160.nodely.io/.../gql/v0"
+  },
+  "pkeys": {
+    "airdrop": "...",
+  },
+  "algodrop" : {
+    "proposer_reward" : 2000000,
+    "cache": 60, 
+    "sender_key" : "airdrop",
+    "auth_key" : "airdrop"
+  },
+  "singletons": {
+    "algodrop": true
+  }
+} 
