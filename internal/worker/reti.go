@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	RetiAppId         = 643382857
+	RetiAppId         = 668529889
 	RetiKeyValidators = "bnVtVg=="
 	RetiKeyStaked     = "c3Rha2Vk"
 	RetiKeyStakers    = "bnVtU3Rha2Vycw=="
@@ -49,7 +49,7 @@ type ValidatorConfig struct {
 	GatingAssetMinBalance      uint64    `binary:"uint64"`
 	RewardTokenID              uint64    `binary:"uint64"`
 	RewardPerPayout            uint64    `binary:"uint64"`
-	PayoutEveryXMins           uint16    `binary:"uint16"`
+	EpochRoundLength           uint32    `binary:"uint32"`
 	PercentToValidator         uint32    `binary:"uint32"`
 	ValidatorCommissionAddress [32]byte  `binary:"[]uint8"`
 	MinEntryStake              uint64    `binary:"uint64"`

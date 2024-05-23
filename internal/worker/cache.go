@@ -89,14 +89,16 @@ func (w *ALGODROPWorker) updateReti(ctx context.Context) {
 	w.Log.Infof("Reti validators:%d, staked:%f, stakers:%d", rinfo.Validators, rinfo.Staked.ToAlgos(), rinfo.Stakers)
 	var op OnlinePools = make(OnlinePools, rinfo.Validators*2)
 
-	for i := uint64(1); i < rinfo.Validators; i++ {
+	for i := uint64(1); i <= rinfo.Validators; i++ {
 		vi, err := w.getRetiValidatorInfo(ctx, i)
 		if err != nil {
 			w.Log.WithError(err).Errorf("vid:%d", i)
 			continue
 		}
+		w.Log.Infof("vid:%d/%d Token:%d, Min:%.0f", i, vi.Config.ID, vi.Config.RewardTokenID, float64(vi.Config.MinEntryStake)/1_000_000.0)
+
 		if vi.Config.SunsettingOn > 0 {
-			w.Log.Warnf("vid:%d sunsetting", i)
+			w.Log.Warnf("vid:%d sunsetting at %d", i, vi.Config.SunsettingOn)
 			continue
 		}
 		for pi := 0; pi < int(vi.State.NumPools); pi++ {
