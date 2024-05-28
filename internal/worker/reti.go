@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	RetiAppId         = 668529889
+	RetiAppId         = 673404372
 	RetiKeyValidators = "bnVtVg=="
 	RetiKeyStaked     = "c3Rha2Vk"
 	RetiKeyStakers    = "bnVtU3Rha2Vycw=="
