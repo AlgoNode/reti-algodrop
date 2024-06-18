@@ -2,8 +2,6 @@ package worker
 
 import (
 	"context"
-	"math/rand"
-	"reflect"
 
 	"github.com/algonode/reti-algodrop/internal/worker/common"
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
@@ -11,6 +9,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/transaction"
 	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/mroth/weightedrand/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,6 +26,7 @@ type RewardSender struct {
 	SParams     *types.SuggestedParams
 	OAccts      OnlineAccts
 	OPools      OnlinePools
+	Chooser     *weightedrand.Chooser[types.Address, int]
 }
 
 func (oa OnlineAccts) IsOnline(addr types.Address) bool {
@@ -53,9 +53,25 @@ func (w *ALGODROPWorker) getOPools() OnlinePools {
 }
 
 func (w *ALGODROPWorker) setOPools(op OnlinePools) {
+
+	choices := make([]weightedrand.Choice[types.Address, int], 0)
+	for k, v := range op {
+		choices = append(choices, weightedrand.NewChoice(k, int(v*1000000)))
+	}
+
+	chooser, _ := weightedrand.NewChooser(choices...)
+
 	w.Lock()
 	defer w.Unlock()
 	w.OPools = op
+	w.Chooser = chooser
+}
+
+func (w *ALGODROPWorker) getRandomWeigthedPool() types.Address {
+	w.RLock()
+	chooser := w.Chooser
+	w.RUnlock()
+	return chooser.Pick()
 }
 
 func (w *ALGODROPWorker) getSenderInfo() *models.Account {
@@ -152,22 +168,27 @@ func (w *ALGODROPWorker) dropAlgo(ctx context.Context, bv *BlockInfo) {
 	onlPoolsMap := w.getOPools()
 	if len(onlPoolsMap) == 0 {
 		w.Log.Warnf("No online pool data yet, prize is gone.")
+		return
 	}
-	var winner types.Address
 	prize := bv.fees
-	// is proposer a Reti Pool ?
-	_, hit := onlPoolsMap[bv.proposer]
-	if hit {
-		winner = bv.proposer
-		prize += types.MicroAlgos(w.C.Cfg.ADrop.Reward)
-	} else {
-		keys := reflect.ValueOf(onlPoolsMap).MapKeys()
-		if len(keys) == 0 {
-			w.Log.Warnf("No online pool data yet, prize is gone.")
-			return
-		}
-		winner = keys[rand.Intn(len(keys))].Interface().(types.Address)
+	if prize < 1_000*5 {
+		prize = 1_000 * 5
 	}
+	// 	var winner types.Address
+	// is proposer a Reti Pool ?
+	// _, hit := onlPoolsMap[bv.proposer]
+	// if hit {
+	// 	winner = bv.proposer
+	// 	prize += types.MicroAlgos(w.C.Cfg.ADrop.Reward)
+	// } else {
+	// 	keys := reflect.ValueOf(onlPoolsMap).MapKeys()
+	// 	if len(keys) == 0 {
+	// 		w.Log.Warnf("No online pool data yet, prize is gone.")
+	// 		return
+	// 	}
+	// 	winner = keys[rand.Intn(len(keys))].Interface().(types.Address)
+	// }
+	winner := w.getRandomWeigthedPool()
 	w.drop(ctx, winner, prize)
 }
 

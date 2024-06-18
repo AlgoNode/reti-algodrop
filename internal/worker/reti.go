@@ -97,7 +97,7 @@ func (w *ALGODROPWorker) getRetiValidatorInfo(ctx context.Context, vid uint64) (
 	var vi ValidatorInfo
 	box, err := w.C.Aapi.GetAppBox(ctx, RetiAppId, getValidatorListBoxName(vid))
 	if err != nil {
-		w.Log.WithError(err).Error("error getting info for validator %d", vid)
+		w.Log.WithError(err).Errorf("error getting info for validator %d", vid)
 		return nil, err
 	}
 	binarystruct.Unmarshal(box.Value, binarystruct.BigEndian, &vi)

@@ -88,7 +88,6 @@ func (w *ALGODROPWorker) updateReti(ctx context.Context) {
 	rinfo.Stakers = getTealInt(app.Params.GlobalState, RetiKeyStakers)
 	w.Log.Infof("Reti validators:%d, staked:%f, stakers:%d", rinfo.Validators, rinfo.Staked.ToAlgos(), rinfo.Stakers)
 	var op OnlinePools = make(OnlinePools, rinfo.Validators*2)
-
 	for i := uint64(1); i <= rinfo.Validators; i++ {
 		vi, err := w.getRetiValidatorInfo(ctx, i)
 		if err != nil {
@@ -113,9 +112,11 @@ func (w *ALGODROPWorker) updateReti(ctx context.Context) {
 				w.Log.Warnf("vid:%d pool:%d addr:%s not online", i, pi, paddr)
 				continue
 			}
-			w.Log.Infof("EligiblePool:%d@%d App:%d Addr:%s Stakers:%d Staked:%dA",
-				pi, vi.Config.ID, p.PoolAppId, paddr, p.TotalStakers, p.TotalAlgoStaked/1000000)
+			pcts := float64(p.TotalAlgoStaked) / float64(rinfo.Staked)
+			w.Log.Infof("EligiblePool:%d@%d App:%d Addr:%s Stakers:%d Staked:%dA StakePct:%.4f%%",
+				pi, vi.Config.ID, p.PoolAppId, paddr, p.TotalStakers, p.TotalAlgoStaked/1000000, 100*pcts)
 			op[paddr] = float64(p.TotalAlgoStaked) / 1000000.0
+
 		}
 	}
 	w.setOPools(op)
